@@ -1,0 +1,67 @@
+
+
+LOG_FILE = "logs/monitor.log"
+REPORT_FILE = "reports/report.txt"
+
+def leer_logs():
+    if not os.path.exists(LOG_FILE):
+        print("[!] No hay logs")
+        return []
+
+    with open(LOG_FILE, "r", encoding="utf-8") as f:
+        return f.readlines()
+
+def analizar_eventos(logs):
+    eventos = []
+
+    for linea in logs:
+        if "]" in linea:
+            evento = linea.split("]")[-1].strip()
+            eventos.append(evento)
+
+    conteo = Counter(eventos)
+    return conteo
+
+def detectar_sospechoso(conteo):
+    alertas = []
+
+    for evento, cantidad in conteo.items():
+        if cantidad >= 5:
+            alertas.append(f"[ALERTA] Evento repetido: {evento} ({cantidad} veces)")
+
+        if "fallido" in evento.lower():
+            alertas.append(f"[PELIGRO] Posible ataque: {evento}")
+
+        if "sospechosa" in evento.lower():
+            alertas.append(f"[CRÍTICO] Actividad sospechosa detectada")
+
+    return alertas
+
+def generar_reporte(conteo, alertas):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    with open(REPORT_FILE, "w", encoding="utf-8") as f:
+        f.write("=== REPORTE DE SEGURIDAD ===\n")
+        f.write(f"Fecha: {now}\n\n")
+
+        f.write("Eventos:\n")
+        for evento, cantidad in conteo.items():
+            f.write(f"- {evento}: {cantidad}\n")
+
+        f.write("\nAlertas:\n")
+        if alertas:
+            for alerta in alertas:
+                f.write(alerta + "\n")
+        else:
+            f.write("Sin alertas críticas\n")
+
+    print("[+] Reporte generado en reports/report.txt")
+
+def main():
+    logs = leer_logs()
+    conteo = analizar_eventos(logs)
+    alertas = detectar_sospechoso(conteo)
+    generar_reporte(conteo, alertas)
+
+if name == "main":
+    main()
